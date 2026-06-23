@@ -22,7 +22,7 @@ module "port_forwards" {
       forward_ip   = "10.0.20.30"
       forward_port = "2049"
       source = {
-        type = "address"
+        type = "ip"
         ip   = "192.0.2.10"
       }
     }

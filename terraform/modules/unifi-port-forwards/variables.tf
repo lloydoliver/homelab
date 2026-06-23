@@ -7,7 +7,6 @@ variable "port_forwards" {
   type = map(object({
     name          = string
     protocol      = optional(string, "tcp_udp") # tcp | udp | tcp_udp
-    enabled       = optional(bool, true)
     logging       = optional(bool, false)
     wan_interface = optional(string, "wan")
     wan_port      = string # external port on the WAN
@@ -15,7 +14,7 @@ variable "port_forwards" {
     forward_port  = string # internal target port
     source = optional(object({
       enabled           = optional(bool, true)
-      type              = optional(string) # e.g. address | firewall-group
+      type              = optional(string) # ip | firewall_group
       ip                = optional(string)
       firewall_group_id = optional(string)
     }))

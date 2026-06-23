@@ -4,7 +4,6 @@ resource "unifi_port_forward" "this" {
 
   name     = each.value.name
   protocol = each.value.protocol
-  enabled  = each.value.enabled
   logging  = each.value.logging
 
   wan = {

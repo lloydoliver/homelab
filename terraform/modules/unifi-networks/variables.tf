@@ -9,6 +9,9 @@ variable "networks" {
     network_isolation = optional(bool, false)
     multicast_dns     = optional(bool, false)
     igmp_snooping     = optional(bool, false)
+    # IPv6 off by default (interface_type "none"); set per-network to enable.
+    ipv6_interface_type = optional(string, "none")
+    ipv6_ra             = optional(bool, false)
     dhcp = optional(object({
       enabled     = optional(bool, true)
       start       = string

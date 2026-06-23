@@ -19,7 +19,7 @@ module "port_forwards" {
       forward_ip   = "10.0.20.30" # NAS
       forward_port = "2049"
       source = {
-        type              = "firewall-group"
+        type              = "firewall_group" # or "ip"
         firewall_group_id = unifi_firewall_group.cameras.id
       }
     }
@@ -31,9 +31,9 @@ module "port_forwards" {
 
 `port_forwards` map, per entry: `name`, `wan_port`, `forward_ip`, `forward_port`
 required; `protocol` (default `tcp_udp`), `wan_interface` (default `wan`),
-`enabled`, `logging`, and an optional `source` block (`type`, `ip`,
-`firewall_group_id`) to restrict the source. Lock the source given the hostile
-WAN-side network.
+`logging`, and an optional `source` block (`type` = `ip` or `firewall_group`,
+plus `ip`/`firewall_group_id`) to restrict the source. Lock the source given the
+hostile WAN-side network.
 
 ## Outputs
 
