@@ -10,8 +10,10 @@ resource "unifi_network" "this" {
   domain_name       = each.value.domain_name
   internet_access   = each.value.internet_access
   network_isolation = each.value.network_isolation
-  multicast_dns     = each.value.multicast_dns
-  igmp_snooping     = each.value.igmp_snooping
+  # Set only when enabling. The provider can't reliably persist false (it reads
+  # back true → "inconsistent result"), so leave it computed when off.
+  multicast_dns = each.value.multicast_dns ? true : null
+  igmp_snooping = each.value.igmp_snooping
 
   ipv6_interface_type = each.value.ipv6_interface_type
   ipv6_ra             = each.value.ipv6_ra
