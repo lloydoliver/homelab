@@ -8,12 +8,11 @@ resource "unifi_wlan" "this" {
   user_group_id   = each.value.user_group_id
   network_id      = each.value.network_id
   ap_group_ids    = each.value.ap_group_ids
-  wlan_bands      = each.value.wlan_bands
+  wlan_band       = each.value.wlan_band
   is_guest        = each.value.is_guest
   hide_ssid       = each.value.hide_ssid
   l2_isolation    = each.value.l2_isolation
   wpa3_support    = each.value.wpa3_support
   wpa3_transition = each.value.wpa3_transition
   pmf_mode        = each.value.pmf_mode
-  enabled         = each.value.enabled
 }

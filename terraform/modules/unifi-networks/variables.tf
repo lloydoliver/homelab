@@ -1,10 +1,8 @@
 variable "networks" {
   description = <<-EOT
-    UniFi networks (VLANs) to create, keyed by a stable identifier. 0.41 schema:
-    corporate networks with a vlan_id. DHCP name servers come from dhcp.dns (no
-    separate enable toggle). IPv6 is disabled by default. mDNS and per-network
-    isolation aren't exposed by this provider version, manage those in the
-    controller (the USG Pro-4 also caps mDNS at 5 networks).
+    UniFi corporate networks (VLANs) to create, keyed by a stable identifier.
+    DHCP name servers come from dhcp.dns. mDNS reflection, inter-VLAN isolation
+    and internet access are managed here. IPv6 is disabled by default.
   EOT
   type = map(object({
     name    = string
@@ -17,6 +15,9 @@ variable "networks" {
       dns   = optional(list(string)) # DNS servers handed to clients
       lease = optional(number)       # seconds
     }))
-    ipv6_disabled = optional(bool, true)
+    multicast_dns     = optional(bool, false) # mDNS reflection onto this VLAN
+    network_isolation = optional(bool, false) # block intra-VLAN client traffic
+    internet_access   = optional(bool, true)
+    ipv6_disabled     = optional(bool, true)
   }))
 }

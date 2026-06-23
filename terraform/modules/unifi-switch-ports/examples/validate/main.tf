@@ -3,8 +3,8 @@ terraform {
   required_version = ">= 1.10"
   required_providers {
     unifi = {
-      source  = "ubiquiti-community/unifi"
-      version = "0.41.5"
+      source  = "filipowm/unifi"
+      version = "1.0.0"
     }
   }
 }
@@ -29,10 +29,10 @@ module "switch" {
 
   port_profiles = {
     uplink_all     = { name = "uplink-all", forward = "all", native_network_id = local.net.mgmt, poe_mode = "off" }
-    trunk_ap       = { name = "trunk-ap", forward = "customize", native_network_id = local.net.mgmt, tagged_network_ids = [local.net.users, local.net.customer, local.net.iot], poe_mode = "auto" }
+    trunk_ap       = { name = "trunk-ap", forward = "customize", native_network_id = local.net.mgmt, tagged_vlan_mgmt = "custom", excluded_network_ids = [local.net.servers, local.net.services, local.net.sandbox], poe_mode = "auto" }
     access_servers = { name = "access-servers", forward = "native", native_network_id = local.net.servers, poe_mode = "auto" }
     access_iot     = { name = "access-iot", forward = "native", native_network_id = local.net.iot, poe_mode = "off" }
-    trunk_node     = { name = "trunk-node", forward = "customize", native_network_id = local.net.servers, tagged_network_ids = [local.net.mgmt, local.net.services, local.net.sandbox], poe_mode = "off" }
+    trunk_node     = { name = "trunk-node", forward = "customize", native_network_id = local.net.servers, tagged_vlan_mgmt = "custom", excluded_network_ids = [local.net.users, local.net.customer, local.net.iot], poe_mode = "off" }
     disabled       = { name = "disabled", forward = "disabled" }
   }
 
@@ -46,7 +46,8 @@ module "switch" {
     "11" = { profile_key = "trunk_node", name = "ryzen" }
     "13" = { profile_key = "trunk_node", name = "thinkcentre-1" }
     "15" = { profile_key = "trunk_node", name = "thinkcentre-2" }
-    "17" = { name = "nas-lag", native_network_id = local.net.servers, aggregate = { members = [17, 19, 21, 23] } }
+    # NAS LACP across the four consecutive ports 17-20 (servers VLAN).
+    "17" = { profile_key = "access_servers", name = "nas-lag", aggregate_num_ports = 4 }
     # Unused ports (and SFP 25/26) shut for zero-trust hygiene.
     "4"  = { profile_key = "disabled" }
     "6"  = { profile_key = "disabled" }
@@ -55,9 +56,9 @@ module "switch" {
     "12" = { profile_key = "disabled" }
     "14" = { profile_key = "disabled" }
     "16" = { profile_key = "disabled" }
-    "18" = { profile_key = "disabled" }
-    "20" = { profile_key = "disabled" }
+    "21" = { profile_key = "disabled" }
     "22" = { profile_key = "disabled" }
+    "23" = { profile_key = "disabled" }
     "24" = { profile_key = "disabled" }
     "25" = { profile_key = "disabled" }
     "26" = { profile_key = "disabled" }
