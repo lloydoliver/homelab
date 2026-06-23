@@ -13,6 +13,9 @@ resource "unifi_network" "this" {
   multicast_dns     = each.value.multicast_dns
   igmp_snooping     = each.value.igmp_snooping
 
+  ipv6_interface_type = each.value.ipv6_interface_type
+  ipv6_ra             = each.value.ipv6_ra
+
   dhcp_server = each.value.dhcp == null ? null : {
     enabled     = each.value.dhcp.enabled
     start       = each.value.dhcp.start
