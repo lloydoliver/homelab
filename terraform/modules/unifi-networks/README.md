@@ -6,9 +6,11 @@ deployment supplies the VLAN definitions; this module just maps them to
 
 ## Provider
 
-Uses [`ubiquiti-community/unifi`](https://registry.terraform.io/providers/ubiquiti-community/unifi)
-(`~> 0.52`), the maintained successor to the archived `paultyng/unifi`. Pin and
-test against your controller version, the schema differs across the forks.
+Uses [`filipowm/unifi`](https://registry.terraform.io/providers/filipowm/unifi)
+(`1.0.0`). It creates VLANs correctly, round-trips cleanly, and supports
+controller 6.x+. The ubiquiti-community forks were dropped: early 0.41.x can't
+set `vlan_enabled` (VLAN creates fail), and 0.41.25/0.52.x can't round-trip
+`forward`/tagged-VLAN/`multicast_dns`.
 
 ## Usage
 

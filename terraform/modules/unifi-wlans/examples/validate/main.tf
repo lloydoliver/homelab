@@ -4,8 +4,8 @@ terraform {
   required_version = ">= 1.10"
   required_providers {
     unifi = {
-      source  = "ubiquiti-community/unifi"
-      version = "0.41.5"
+      source  = "filipowm/unifi"
+      version = "1.0.0"
     }
   }
 }
@@ -23,7 +23,7 @@ module "wlans" {
       network_id    = "00000000000000000000000a"
       user_group_id = "00000000000000000000000b"
       ap_group_ids  = ["00000000000000000000000c"]
-      wlan_bands    = ["2g", "5g"]
+      wlan_band     = "both"
       wpa3_support  = true
     }
     customer = {

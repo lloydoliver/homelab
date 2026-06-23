@@ -4,10 +4,10 @@ Creates UniFi WLANs (SSIDs) from a data map, one `unifi_wlan` per entry.
 
 ## Notes
 
-- `user_group_id` is **required** by the provider and there is no user-group data
-  source in `ubiquiti-community/unifi`, so the consumer must supply the ID (read
-  it from the controller). `ap_group_ids` can be looked up with the
-  `unifi_ap_group` data source in the consuming config.
+- `user_group_id` is **required**; create one with the `unifi_user_group`
+  resource (filipowm provides it) and pass its ID. `ap_group_ids` can be looked
+  up with the `unifi_ap_group` data source in the consuming config.
+- `wlan_band` is a single value: `both` (default), `2g`, or `5g`.
 - `network_id` ties the SSID to a VLAN (use the `unifi-networks` module output).
 - Passphrases should be supplied from a SOPS-encrypted source, never committed
   in plaintext.
@@ -16,6 +16,10 @@ Creates UniFi WLANs (SSIDs) from a data map, one `unifi_wlan` per entry.
 
 ```hcl
 data "unifi_ap_group" "default" {}
+
+resource "unifi_user_group" "default" {
+  name = "lab"
+}
 
 module "wlans" {
   source = "github.com/lloydoliver/homelab//terraform/modules/unifi-wlans?ref=main"
@@ -26,9 +30,9 @@ module "wlans" {
       security      = "wpapsk"
       passphrase    = var.trusted_wifi_passphrase # from SOPS
       network_id    = module.networks.network_ids["users"]
-      user_group_id = var.default_user_group_id
+      user_group_id = unifi_user_group.default.id
       ap_group_ids  = [data.unifi_ap_group.default.id]
-      wlan_bands    = ["2g", "5g"]
+      wlan_band     = "both"
       wpa3_support  = true
     }
   }

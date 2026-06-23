@@ -13,6 +13,10 @@ resource "unifi_network" "this" {
   dhcp_dns     = try(each.value.dhcp.dns, null)
   dhcp_lease   = try(each.value.dhcp.lease, null)
 
+  multicast_dns             = each.value.multicast_dns
+  network_isolation_enabled = each.value.network_isolation
+  internet_access_enabled   = each.value.internet_access
+
   # IPv6 off across the lab.
   ipv6_interface_type = each.value.ipv6_disabled ? "none" : null
 }
