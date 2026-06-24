@@ -64,6 +64,21 @@ autoinstall:
   locale: en_GB.UTF-8
   keyboard:
     layout: gb
+  # DHCP for the address (a reservation pins it), but force real upstream DNS:
+  # the live installer's resolv.conf is a loopback resolver that's dead inside
+  # the target chroot, so in-target apt can't resolve. Explicit nameservers (and
+  # ignoring the DHCP-supplied ones) make curtin write a working target resolv.conf.
+  network:
+    version: 2
+    ethernets:
+      enlab:
+        match:
+          name: "en*"
+        dhcp4: true
+        dhcp4-overrides:
+          use-dns: false
+        nameservers:
+          addresses: [1.1.1.1, 1.0.0.1]
   apt:
     geoip: false
     preserve_sources_list: false
