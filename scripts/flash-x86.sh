@@ -61,6 +61,15 @@ cat > "$WORK/nocloud/user-data" <<EOF
 #cloud-config
 autoinstall:
   version: 1
+  # The installer's resolv.conf is a loopback resolver that's dead inside the
+  # target chroot, so in-target apt can't resolve. Force a real upstream and make
+  # it immutable so the network stage can't revert it — early-commands run before
+  # networking, and chattr +i means it survives into curtin's in-target apt.
+  early-commands:
+    - "chattr -i /etc/resolv.conf 2>/dev/null || true; rm -f /etc/resolv.conf"
+    - "echo nameserver 1.1.1.1 > /etc/resolv.conf"
+    - "echo nameserver 1.0.0.1 >> /etc/resolv.conf"
+    - "chattr +i /etc/resolv.conf"
   locale: en_GB.UTF-8
   keyboard:
     layout: gb
