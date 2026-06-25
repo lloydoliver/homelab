@@ -1,0 +1,6 @@
+---
+- name: Restart authentik
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ authentik_compose_dir }}"
+    state: restarted
