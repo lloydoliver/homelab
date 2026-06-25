@@ -13,7 +13,9 @@ the cluster — its instances are simply unavailable while it's down.
 
 ## What it does
 
-- Installs `incus` (daemon + CLI, with VM support) plus the LVM and btrfs tooling.
+- Adds the Zabbly repo and installs Incus 7.0 LTS + the web UI
+  (`incus-ui-canonical`) plus the LVM and btrfs tooling. The UI is served by the
+  daemon at `https://<member>:8443/ui`.
 - Carves a dedicated LV from the OS volume group and lets Incus format it btrfs.
 - Adds the `ansible` user to `incus-admin` for non-root management.
 - Builds `<uplink>.<vlan>` VLAN interfaces and bridges in netplan over the trunked
@@ -31,7 +33,9 @@ Launch an instance onto a VLAN by stacking profiles, e.g.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `incus_packages` | incus, lvm2, btrfs-progs | Packages to install |
+| `incus_zabbly_channel` | `lts-7.0` | Zabbly repo channel |
+| `incus_packages` | incus, incus-ui-canonical | Incus + web UI (from Zabbly) |
+| `incus_tooling` | lvm2, btrfs-progs | Storage tooling (from the OS archive) |
 | `incus_storage_pool` | `default` | Storage pool name |
 | `incus_storage_vg` | `ubuntu-vg` | VG to carve the storage LV from |
 | `incus_storage_lv` | `incus` | LV name for the btrfs pool |
