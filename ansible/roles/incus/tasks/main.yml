@@ -1,11 +1,47 @@
 ---
-- name: Install Incus and storage tooling
+- name: Ensure the apt keyrings directory exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+# Fingerprint 4EFC 5906 96CB 15B8 7C73 A3AD 82CC 8797 C838 DCFD (Zabbly).
+- name: Install the Zabbly repository key
+  become: true
+  ansible.builtin.get_url:
+    url: https://pkgs.zabbly.com/key.asc
+    dest: /etc/apt/keyrings/zabbly.asc
+    mode: "0644"
+
+- name: Add the Zabbly Incus repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: zabbly-incus
+    types: [deb]
+    uris: "https://pkgs.zabbly.com/incus/{{ incus_zabbly_channel }}"
+    suites: ["{{ ansible_distribution_release }}"]
+    components: [main]
+    architectures: ["{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"]
+    signed_by: /etc/apt/keyrings/zabbly.asc
+
+- name: Install storage tooling
+  become: true
+  ansible.builtin.apt:
+    name: "{{ incus_tooling }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+# incus-ui-canonical from Zabbly depends on the matching Incus version, so adding
+# it pulls Incus from the Ubuntu archive's 6.x up to Zabbly's 7.0 LTS. Upgrade
+# cluster members together to avoid a prolonged version skew.
+- name: Install Incus and the web UI from Zabbly
   become: true
   ansible.builtin.apt:
     name: "{{ incus_packages }}"
     state: present
     update_cache: true
-    cache_valid_time: 3600
 
 - name: Allow the ansible user to drive Incus
   become: true

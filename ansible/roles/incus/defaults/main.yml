@@ -1,8 +1,12 @@
 ---
-# Incus plus the LVM and btrfs tooling its storage needs. The single `incus`
-# package (Ubuntu 24.04+) ships both the daemon and the CLI, with VM support.
+# Incus from the Zabbly repo (the upstream Incus repository) — the Ubuntu archive
+# ships Incus but omits the web UI. The lts-7.0 channel gives Incus 7.0.x LTS plus
+# incus-ui-canonical (the daemon-served web UI). Storage tooling stays from the OS.
+incus_zabbly_channel: lts-7.0
 incus_packages:
   - incus
+  - incus-ui-canonical
+incus_tooling:
   - lvm2
   - btrfs-progs
 
