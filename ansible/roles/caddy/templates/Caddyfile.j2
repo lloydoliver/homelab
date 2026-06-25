@@ -13,7 +13,14 @@
 {% for route in caddy_routes %}
 	@{{ route.name }} host {{ route.host }}
 	handle @{{ route.name }} {
-		reverse_proxy {{ route.upstream }} {
+		reverse_proxy {{ route.upstreams | default([route.upstream]) | join(' ') }} {
+{% if (route.upstreams | default([]) | length > 1) or route.lb_policy is defined %}
+			lb_policy {{ route.lb_policy | default('round_robin') }}
+{% endif %}
+{% if route.health_uri is defined %}
+			health_uri {{ route.health_uri }}
+			health_interval {{ route.health_interval | default('10s') }}
+{% endif %}
 {% if route.tls_skip_verify | default(false) %}
 			transport http {
 				tls_insecure_skip_verify

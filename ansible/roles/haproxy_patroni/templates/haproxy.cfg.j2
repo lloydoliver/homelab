@@ -20,3 +20,24 @@ listen postgres-primary
 {% for m in patroni_members %}
     server {{ m.name }} {{ m.ip }}:5432 maxconn 100 check port {{ haproxy_patroni_rest_port }}
 {% endfor %}
+{% if haproxy_redis_backends | default([]) | length > 0 %}
+
+# Redis master frontend. Authentik can't talk Sentinel (only a single host), so
+# this follows the Sentinel-promoted master by checking role:master — Sentinel
+# does the failover, the app just uses {{ haproxy_redis_bind }}.
+listen redis-master
+    bind {{ haproxy_redis_bind }}
+    option tcp-check
+    tcp-check send "AUTH {{ haproxy_redis_password }}\r\n"
+    tcp-check expect string +OK
+    tcp-check send "PING\r\n"
+    tcp-check expect string +PONG
+    tcp-check send "info replication\r\n"
+    tcp-check expect string role:master
+    tcp-check send "QUIT\r\n"
+    tcp-check expect string +OK
+    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+{% for r in haproxy_redis_backends %}
+    server {{ r.name }} {{ r.ip }}:6379 maxconn 100 check
+{% endfor %}
+{% endif %}

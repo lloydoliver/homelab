@@ -5,6 +5,13 @@
 haproxy_patroni_bind: "127.0.0.1:5000"
 haproxy_patroni_rest_port: 8008
 
+# Optional Redis master frontend (Authentik has no Sentinel support, so it reaches
+# Redis through this local endpoint, which follows the Sentinel-promoted master).
+# Set haproxy_redis_backends (from inventory) to enable; password comes from SOPS.
+haproxy_redis_bind: "127.0.0.1:6379"
+haproxy_redis_backends: []
+haproxy_redis_password: ""
+
 # Required from inventory (no default): the Patroni members, e.g.
 #   patroni_members:
 #     - { name: pg-tc1, ip: 10.200.30.33 }

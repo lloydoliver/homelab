@@ -14,7 +14,8 @@
     dest: /etc/haproxy/haproxy.cfg
     owner: root
     group: root
-    mode: "0644"
+    # 0640: the config carries the Redis AUTH password for the master check.
+    mode: "0640"
     validate: haproxy -c -f %s
   notify: Reload haproxy
 

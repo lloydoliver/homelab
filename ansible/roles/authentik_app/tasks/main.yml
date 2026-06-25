@@ -1,0 +1,46 @@
+---
+- name: Install Docker (compose runtime for the Authentik containers)
+  become: true
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create the Authentik compose directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ authentik_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Render the Authentik env
+  become: true
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ authentik_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart authentik
+
+- name: Render the Authentik compose
+  become: true
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: "{{ authentik_compose_dir }}/compose.yaml"
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart authentik
+
+- name: Start Authentik (server + worker)
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ authentik_compose_dir }}"
+    state: present
+    pull: missing
