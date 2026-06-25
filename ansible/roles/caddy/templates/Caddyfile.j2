@@ -4,17 +4,25 @@
 }
 
 *.{{ caddy_domain }} {
+	log {
+		output stdout
+	}
 	tls {
 		dns route53
 	}
 {% for route in caddy_routes %}
 	@{{ route.name }} host {{ route.host }}
 	handle @{{ route.name }} {
-		reverse_proxy {{ route.upstream }}{% if route.tls_skip_verify | default(false) %} {
+		reverse_proxy {{ route.upstream }} {
+{% if route.tls_skip_verify | default(false) %}
 			transport http {
 				tls_insecure_skip_verify
 			}
-		}{% endif +%}
+{% endif %}
+{% for header, value in (route.header_up | default({})).items() %}
+			header_up {{ header }} "{{ value }}"
+{% endfor %}
+		}
 	}
 {% endfor %}
 	handle {

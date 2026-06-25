@@ -31,6 +31,19 @@ caddy_routes:
 
 `tls_skip_verify: true` is for backends with self-signed certs (DSM, UniFi).
 
+An optional `header_up` map rewrites headers sent to the backend — needed for apps
+that reject a proxied origin (UniFi 403s the login otherwise):
+
+```yaml
+  - name: unifi
+    host: "unifi.cypherworks.co.uk"
+    upstream: "https://10.200.20.30:8443"
+    tls_skip_verify: true
+    header_up: { Host: "10.200.20.30:8443", Origin: "https://10.200.20.30:8443", Referer: "https://10.200.20.30:8443" }
+```
+
+Access logging goes to stdout (the journal): `journalctl -u caddy`.
+
 ## Connection
 
 The Caddy instance is reached over the Incus connection (`incus exec`), so it
