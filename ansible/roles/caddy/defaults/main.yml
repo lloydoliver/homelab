@@ -10,6 +10,7 @@ caddy_binary: /usr/local/bin/caddy
 
 # One wildcard cert (Route53 DNS-01) covers every host below. Add/remove a service
 # by editing this list (in group_vars) and re-running — the reload is sub-second.
-# Each entry: name (matcher id), host (FQDN), upstream (backend URL), and
-# tls_skip_verify for backends with self-signed certs.
+# Each entry: name (matcher id), host (FQDN), upstream (backend URL),
+# tls_skip_verify for self-signed backends, and an optional header_up map to
+# rewrite headers sent upstream (e.g. UniFi rejects a proxied Origin/Host).
 caddy_routes: []
