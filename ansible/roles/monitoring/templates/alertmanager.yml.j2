@@ -13,3 +13,7 @@ receivers:
     webhook_configs:
       - url: "http://ntfy/{{ monitoring_ntfy_topic }}?template=alertmanager"
         send_resolved: true
+        http_config:
+          basic_auth:
+            username: alertmanager
+            password: "{{ monitoring_ntfy_alertmanager_password }}"

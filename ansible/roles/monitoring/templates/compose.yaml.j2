@@ -50,6 +50,7 @@ services:
     volumes:
       - {{ monitoring_config_dir }}/ntfy.yml:/etc/ntfy/server.yml:ro
       - ntfycache:/var/cache/ntfy
+      - ntfydata:/var/lib/ntfy
     ports:
       - "8080:80"
 
@@ -92,4 +93,5 @@ volumes:
   vmdata:
   amdata:
   ntfycache:
+  ntfydata:
   grafanadata:
