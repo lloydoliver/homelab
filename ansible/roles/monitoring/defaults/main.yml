@@ -48,9 +48,12 @@ monitoring_grafana_role_path: "contains(groups[*], 'grafana-admins') && 'Admin' 
 # ntfy
 monitoring_ntfy_base_url: ""                 # public base URL ntfy serves on
 monitoring_ntfy_topic: "lab-alerts"
+monitoring_ntfy_user: ""                     # human username (web UI + phone app), from deploy
 
 # Secrets — from SOPS (deploy), never defaulted in real use.
 monitoring_grafana_admin_password: ""
 monitoring_grafana_oidc_client_id: ""
 monitoring_grafana_oidc_client_secret: ""
 monitoring_redis_password: ""
+monitoring_ntfy_alertmanager_password: ""    # alertmanager ntfy user (publish to the topic)
+monitoring_ntfy_user_password: ""            # human ntfy user (subscribe)
