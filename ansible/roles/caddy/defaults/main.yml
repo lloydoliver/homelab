@@ -16,3 +16,9 @@ caddy_binary: /usr/local/bin/caddy
 # tls_skip_verify for self-signed backends, and a header_up map to rewrite headers
 # sent upstream (e.g. UniFi rejects a proxied Origin/Host).
 caddy_routes: []
+
+# Extra CA certificates to trust for verifying internal HTTPS upstreams (e.g. the
+# OpenBao internal CA), so those routes can verify the backend instead of using
+# tls_skip_verify. A map of name -> PEM content; installed into the system trust
+# store. Supplied by the deploy (the CA cert is public, but site-specific).
+caddy_trusted_ca_certs: {}

@@ -1,0 +1,65 @@
+---
+# Put the listener on a cert issued by the internal CA (replacing the package's
+# self-signed bootstrap cert), so Caddy can verify the upstream against the CA and
+# drop tls_skip_verify. Guarded on a marker file: issued once, so re-runs are a
+# no-op. Renewal before expiry is a follow-on (delete the marker or the cert-renewal
+# timer forces a fresh issue). The cert/key overwrite the listener's existing paths,
+# so the listener config is unchanged — just a restart to pick them up.
+- name: Check whether the listener already has a CA-issued cert
+  become: true
+  ansible.builtin.stat:
+    path: "{{ openbao_tls_dir }}/.ca-issued"
+  register: openbao_listener_marker
+
+- name: Issue and install the listener cert from the internal CA
+  when: not openbao_listener_marker.stat.exists
+  block:
+    - name: Issue the listener cert
+      environment:
+        BAO_ADDR: "{{ openbao_api_addr }}"
+        BAO_TOKEN: "{{ openbao_root_token }}"
+        BAO_SKIP_VERIFY: "true"
+      ansible.builtin.command:
+        argv:
+          - bao
+          - write
+          - -format=json
+          - "{{ openbao_pki_mount }}/issue/{{ openbao_listener_cert_role }}"
+          - "common_name={{ openbao_listener_common_name }}"
+          - "alt_names={{ openbao_listener_common_name }}"
+          - "ip_sans={{ openbao_listener_ip_sans }}"
+          - "ttl={{ openbao_listener_cert_ttl }}"
+      register: openbao_listener_issue
+      changed_when: true
+      no_log: true
+
+    - name: Write the listener certificate (leaf + issuing CA)
+      become: true
+      ansible.builtin.copy:
+        content: "{{ (openbao_listener_issue.stdout | from_json).data.certificate }}\n{{ (openbao_listener_issue.stdout | from_json).data.issuing_ca }}\n"
+        dest: "{{ openbao_tls_cert_file }}"
+        owner: openbao
+        group: openbao
+        mode: "0644"
+      no_log: true
+      notify: Restart openbao
+
+    - name: Write the listener private key
+      become: true
+      ansible.builtin.copy:
+        content: "{{ (openbao_listener_issue.stdout | from_json).data.private_key }}\n"
+        dest: "{{ openbao_tls_key_file }}"
+        owner: openbao
+        group: openbao
+        mode: "0600"
+      no_log: true
+      notify: Restart openbao
+
+    - name: Mark the listener cert as CA-issued
+      become: true
+      ansible.builtin.copy:
+        content: "Listener cert issued by the internal CA. Delete to force a re-issue.\n"
+        dest: "{{ openbao_tls_dir }}/.ca-issued"
+        owner: root
+        group: root
+        mode: "0644"
