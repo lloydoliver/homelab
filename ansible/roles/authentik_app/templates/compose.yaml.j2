@@ -28,3 +28,20 @@ services:
       - {{ authentik_media_dir }}:/media
     # No docker.sock mount: embedded-docker outpost management is deliberately
     # off (outposts are deployed as their own Incus services, not via this socket).
+
+  # LDAP outpost — serves the LDAP provider that SSSD on the hosts authenticates
+  # against. One instance per app node (HA; SSSD fails over between them). It dials
+  # AUTHENTIK_HOST outbound and registers against the outpost defined in the ldap
+  # blueprint, matched by AUTHENTIK_TOKEN (the fixed SA token key, from .env — kept
+  # out of this 0640 file). Serves LDAP on 3389 and LDAPS on 6636 in-container,
+  # published on the standard 389/636 so SSSD can use ldaps://<app-node>:636.
+  ldap-outpost:
+    image: {{ authentik_ldap_outpost_image }}
+    restart: unless-stopped
+    environment:
+      AUTHENTIK_HOST: "{{ authentik_ldap_outpost_host }}"
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_TOKEN: "${LDAP_OUTPOST_TOKEN}"
+    ports:
+      - "389:3389"
+      - "636:6636"
