@@ -90,6 +90,20 @@ openbao_oidc_roles: []
 # (the HCL policy body). Lets OIDC users get real policies without the root token.
 openbao_policies: []
 
+# --- SSH CA (audited short-lived SSH) ----------------------------------------
+# Bao signs short-lived user certs; hosts trust the CA via TrustedUserCAKeys (the
+# host-side sshd config lives outside this role). The CA is generated ONCE and
+# guarded — regenerating it would invalidate every host's trust. Empty roles / off
+# by default. Distribute the CA public key (bao read -field=public_key
+# <mount>/config/ca) to the hosts.
+openbao_ssh_enabled: false
+openbao_ssh_mount: ssh-client-signer
+openbao_ssh_default_extensions: '{"permit-pty":""}'
+openbao_ssh_allowed_extensions: "permit-pty,permit-port-forwarding"
+# Signing roles. Each: name, allowed_users (comma list or *), and optional ttl /
+# default_extensions / allowed_extensions.
+openbao_ssh_roles: []
+
 # --- Snapshots (raft DR backups to S3) --------------------------------------
 # Daily encrypted raft snapshot uploaded to S3, retained 5 days by an S3 lifecycle
 # rule. The job authenticates with AppRole (a snapshot-only policy, short-lived token

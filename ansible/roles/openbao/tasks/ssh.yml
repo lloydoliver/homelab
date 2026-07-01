@@ -1,0 +1,49 @@
+---
+# SSH CA: Bao signs short-lived user certs; hosts trust the CA via TrustedUserCAKeys.
+# The CA keypair is generated exactly ONCE — guarded on the existing CA — so a re-run
+# or a post-restore run never regenerates it (which would invalidate every host's
+# trust and lock out cert-based logins).
+- name: Configure the SSH CA
+  environment:
+    BAO_ADDR: "{{ openbao_api_addr }}"
+    BAO_TOKEN: "{{ openbao_root_token }}"
+    BAO_SKIP_VERIFY: "true"
+  block:
+    - name: Enable the SSH secrets engine
+      ansible.builtin.command:
+        cmd: "bao secrets enable -path={{ openbao_ssh_mount }} ssh"
+      register: openbao_ssh_enable
+      changed_when: openbao_ssh_enable.rc == 0
+      failed_when:
+        - openbao_ssh_enable.rc != 0
+        - "'path is already in use' not in openbao_ssh_enable.stderr"
+
+    - name: Check whether the SSH CA already exists
+      ansible.builtin.command:
+        cmd: "bao read -field=public_key {{ openbao_ssh_mount }}/config/ca"
+      register: openbao_ssh_ca
+      changed_when: false
+      failed_when: false
+
+    - name: Generate the SSH CA (once — the guard stops it regenerating)
+      ansible.builtin.command:
+        cmd: "bao write {{ openbao_ssh_mount }}/config/ca generate_signing_key=true"
+      when: openbao_ssh_ca.rc != 0 or (openbao_ssh_ca.stdout | trim | length == 0)
+      changed_when: true
+
+    - name: Create the SSH signing roles
+      ansible.builtin.command:
+        argv:
+          - bao
+          - write
+          - "{{ openbao_ssh_mount }}/roles/{{ item.name }}"
+          - key_type=ca
+          - allow_user_certificates=true
+          - "allowed_users={{ item.allowed_users | default('*') }}"
+          - "default_extensions={{ item.default_extensions | default(openbao_ssh_default_extensions) }}"
+          - "allowed_extensions={{ item.allowed_extensions | default(openbao_ssh_allowed_extensions) }}"
+          - "ttl={{ item.ttl | default('1h') }}"
+      loop: "{{ openbao_ssh_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
