@@ -12,10 +12,13 @@ openbao_arch: amd64
 openbao_release_base: "https://github.com/openbao/openbao/releases/download/v{{ openbao_version }}"
 openbao_deb_url: "{{ openbao_release_base }}/openbao_{{ openbao_version }}_linux_{{ openbao_arch }}.deb"
 
-# Raft data + the package's self-signed bootstrap cert (package defaults).
+# Raft data + the package's self-signed bootstrap cert (package defaults). The
+# listener cert/key files are later overwritten in place with a PKI-issued cert (see
+# the listener-cert section), so the listener config paths never change.
 openbao_data_dir: /opt/openbao/data
-openbao_tls_cert_file: /opt/openbao/tls/tls.crt
-openbao_tls_key_file: /opt/openbao/tls/tls.key
+openbao_tls_dir: /opt/openbao/tls
+openbao_tls_cert_file: "{{ openbao_tls_dir }}/tls.crt"
+openbao_tls_key_file: "{{ openbao_tls_dir }}/tls.key"
 
 # Listener bind. Generic default binds all interfaces; the deploy should pin this to
 # the instance's own address for least exposure (the address is site data).
@@ -58,3 +61,13 @@ openbao_pki_root_common_name: ""
 openbao_pki_issuing_url: ""
 openbao_pki_crl_url: ""
 openbao_pki_roles: []
+
+# Listener cert from the internal PKI — replaces the package's self-signed bootstrap
+# cert so Caddy can verify the upstream against the CA. Issued once and guarded on a
+# marker file, so re-runs don't churn it (delete the marker, or the future renewal
+# timer, to rotate before expiry). Empty role = the listener stays on the bootstrap
+# cert. common_name + ip_sans are site data (the instance address Caddy dials).
+openbao_listener_cert_role: ""
+openbao_listener_cert_ttl: "2160h"   # 90d
+openbao_listener_common_name: ""
+openbao_listener_ip_sans: ""

@@ -1,4 +1,22 @@
 ---
+# Trust internal CAs (e.g. OpenBao's) via the system store, so reverse_proxy can
+# verify those HTTPS upstreams. Caddy checks upstream certs against the system trust
+# pool, so this is what lets a route drop tls_skip_verify. Runs before the reload.
+- name: Install trusted CA certificates for internal upstreams
+  become: true
+  ansible.builtin.copy:
+    content: "{{ item.value }}"
+    dest: "/usr/local/share/ca-certificates/{{ item.key }}.crt"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ caddy_trusted_ca_certs | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify:
+    - Update CA trust
+    - Reload Caddy
+
 - name: Render the Caddyfile
   become: true
   ansible.builtin.template:

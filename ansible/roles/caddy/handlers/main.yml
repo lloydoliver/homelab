@@ -1,4 +1,11 @@
 ---
+# Refresh the system trust store after installing a CA. Defined before Reload Caddy
+# so, when both fire, the store is updated before Caddy re-reads its trust pool.
+- name: Update CA trust
+  become: true
+  ansible.builtin.command: update-ca-certificates
+  changed_when: true
+
 # Graceful, sub-second config swap — no dropped connections, no restart.
 - name: Reload Caddy
   become: true
