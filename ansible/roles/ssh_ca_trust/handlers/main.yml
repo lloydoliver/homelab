@@ -1,0 +1,8 @@
+---
+# Validate the FULL sshd config (which now Includes the drop-in), then reload — in
+# one command so validation actually gates the reload. `sshd -t` fails → `&&`
+# short-circuits, reload never runs, the handler fails loudly, and the running sshd
+# keeps serving the last-good config. reload (not restart) never drops connections.
+- name: Reload sshd
+  become: true
+  ansible.builtin.shell: "/usr/sbin/sshd -t && systemctl reload {{ ssh_ca_sshd_service }}"

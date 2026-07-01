@@ -1,0 +1,22 @@
+---
+# Trust the OpenBao SSH CA for user certificates: sshd accepts a login when the user
+# presents a cert signed by this CA whose principals include the target username.
+#
+# ADDITIVE + SAFE: this only drops a TrustedUserCAKeys directive via a
+# sshd_config.d/ include. It never touches PubkeyAuthentication, AuthorizedKeysFile,
+# or AuthenticationMethods — so existing key-based logins (the ansible user) are
+# unaffected. The config is `sshd -t`-validated before any reload; a bad config
+# fails the run and leaves the running sshd untouched.
+
+# The CA public key (from OpenBao: `bao read -field=public_key
+# ssh-client-signer/config/ca`, or GET /v1/ssh-client-signer/public_key). Site data —
+# set in the deploy. Empty = role is a no-op.
+ssh_ca_public_key: ""
+ssh_ca_trust_file: /etc/ssh/openbao_ssh_ca.pub
+
+# The drop-in that adds the trust. The main sshd_config must keep its
+# `Include /etc/ssh/sshd_config.d/*.conf` line (Ubuntu/Debian default).
+ssh_ca_dropin_file: /etc/ssh/sshd_config.d/50-openbao-ca.conf
+
+# systemd unit for the SSH daemon (Debian/Ubuntu: ssh; some distros: sshd).
+ssh_ca_sshd_service: ssh
