@@ -46,3 +46,35 @@
     name: sssd
     enabled: true
     state: started
+
+# --- PAM login/sudo — CONNECTIVITY-SENSITIVE, only when explicitly enabled ----
+# Wires pam_sss (sudo password against Authentik, ssh-users access gate) and
+# pam_mkhomedir (auto home dirs). Local root/ansible are unaffected (unknown to
+# SSSD → pam_unix admits them; key-based SSH never hits the PAM auth stack).
+- name: Configure PAM for SSSD login/sudo
+  when: sssd_enable_pam_auth | bool
+  block:
+    - name: Ensure the SSSD + mkhomedir PAM modules are installed
+      become: true
+      ansible.builtin.apt:
+        name:
+          - libpam-sss
+          - libpam-modules   # provides pam_mkhomedir + its pam-config
+        state: present
+
+    - name: Check whether the mkhomedir PAM profile is already active
+      become: true
+      ansible.builtin.command: grep -q pam_mkhomedir.so /etc/pam.d/common-session
+      register: sssd_mkhomedir_active
+      changed_when: false
+      failed_when: false
+
+    # pam-auth-update is Debian's sanctioned, reversible way to edit the common-*
+    # stack (keeps pam_unix, so local accounts still authenticate). Guarded so it's
+    # idempotent. NOTE: on CIS-hardened hosts, verify the faillock/pwquality config
+    # still composes after this — check at the rig with a held root session.
+    - name: Enable the SSSD + mkhomedir PAM profiles
+      become: true
+      ansible.builtin.command: "pam-auth-update --enable {{ sssd_pam_profiles | join(' ') }}"
+      when: sssd_mkhomedir_active.rc != 0
+      changed_when: true

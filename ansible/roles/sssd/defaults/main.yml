@@ -50,3 +50,23 @@ sssd_nsswitch:
 # enumerate=false: look users up on demand (recommended) rather than pulling the
 # whole directory.
 sssd_enumerate: false
+
+# --- PAM auth (login/sudo) — CONNECTIVITY-SENSITIVE, default OFF -------------
+# When false (default) this role is identity-only (NSS) and cannot affect login or
+# sudo. Flip to true ONLY with console/break-glass access to the host: it adds
+# auth_provider + access_provider to SSSD and enables the sss + mkhomedir PAM
+# profiles, so sudo authenticates against Authentik (password) and only members of
+# sssd_ssh_access_group may log in. Local root/ansible keep working via pam_unix.
+sssd_enable_pam_auth: false
+# LDAP group whose members are allowed to log in (PAM access filter on memberOf).
+sssd_ssh_access_group: ssh-users
+# PAM profiles enabled via pam-auth-update when auth is on. mkhomedir auto-creates
+# home dirs on first login; sss wires pam_sss for auth/account/session.
+sssd_pam_profiles:
+  - sss
+  - mkhomedir
+# Accounts SSSD must never resolve from LDAP (kept local, always). root + the Ansible
+# login are here so a directory problem can't shadow them or block key-based SSH.
+sssd_local_exempt_users:
+  - root
+  - ansible

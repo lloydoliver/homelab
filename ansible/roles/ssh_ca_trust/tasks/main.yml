@@ -1,0 +1,26 @@
+---
+# No-op unless a CA key is supplied.
+- name: Install the OpenBao SSH CA public key
+  become: true
+  ansible.builtin.copy:
+    content: "{{ ssh_ca_public_key }}\n"
+    dest: "{{ ssh_ca_trust_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: ssh_ca_public_key | length > 0
+  notify: Reload sshd
+
+- name: Trust the SSH CA for user certificates (additive drop-in)
+  become: true
+  ansible.builtin.copy:
+    content: |
+      # Managed by ssh_ca_trust. Accept user certs signed by the OpenBao SSH CA.
+      # Additive only — existing key-based auth (the ansible user) is untouched.
+      TrustedUserCAKeys {{ ssh_ca_trust_file }}
+    dest: "{{ ssh_ca_dropin_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: ssh_ca_public_key | length > 0
+  notify: Reload sshd

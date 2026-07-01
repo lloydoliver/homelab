@@ -2,15 +2,30 @@
 # Identity only — no PAM/auth wiring here (see the role header).
 [sssd]
 config_file_version = 2
-services = nss
+services = nss{% if sssd_enable_pam_auth %}, pam{% endif %}
+
 domains = {{ sssd_domain_name }}
 
 [nss]
 default_shell = {{ sssd_default_shell }}
 fallback_homedir = {{ sssd_fallback_homedir }}
+# Never resolve these accounts via LDAP — they stay purely local, so a directory
+# problem can never shadow root or the Ansible login (which is SSH-key only).
+filter_users = {{ sssd_local_exempt_users | join(', ') }}
+filter_groups = {{ sssd_local_exempt_users | join(', ') }}
 
 [domain/{{ sssd_domain_name }}]
 id_provider = ldap
+{% if sssd_enable_pam_auth %}
+# Auth (sudo password against Authentik) + access gate. Local accounts are unknown
+# to SSSD, so this gate never applies to them — only LDAP users must be in the
+# access group. chpass off: passwords are managed in Authentik, not here.
+auth_provider = ldap
+access_provider = ldap
+chpass_provider = none
+ldap_access_order = filter
+ldap_access_filter = memberOf=cn={{ sssd_ssh_access_group }},{{ sssd_ldap_group_search_base }}
+{% endif %}
 ldap_uri = {{ sssd_ldap_uris | join(', ') }}
 ldap_search_base = {{ sssd_ldap_base_dn }}
 ldap_user_search_base = {{ sssd_ldap_user_search_base }}
